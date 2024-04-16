@@ -36,8 +36,7 @@ class MLX90640
 public:
     enum State {
         STATE_NONE = 0,
-        STATE_OPEN,
-        STATE_RECV,
+        STATE_PREPEND,
         STATE_SEND,
         STATE_WAIT,
         STATE_TIMEOUT,
@@ -67,6 +66,13 @@ public:
         PACKET_TA = 1540,
         PACKET_CHECKSUM = 1542
     };
+    struct Packet {
+        unsigned short header;
+        unsigned short size;
+        unsigned short temperature[768];
+        unsigned short ta;
+        unsigned short checksum;
+    };
 
     class Scalar
     {
@@ -95,7 +101,7 @@ protected:
     /* parameter */
     int state;
     unsigned long baudRate;
-    std::string portName;
+    std::string devPath;
     std::string sendBuffer;
     float minTemperature;
     float maxTemperature;
@@ -127,8 +133,8 @@ public:
     void setFrequence(int freq);
     void setMode(int mode);
     void setEmissivity(float value);
-    bool open(const std::string &portName, unsigned long baudRate_);
-    void close();
+    bool openDevice(const std::string &portName, unsigned long baudRate_);
+    void closeDevice();
 };
 
 #endif // MLX90640_H

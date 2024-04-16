@@ -1,10 +1,11 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <QDesktopServices>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
-    , readyCaputure(false)
+    , readyCaputure(0)
     , device(nullptr)
 {
     ui->setupUi(this);
@@ -41,20 +42,20 @@ MainWindow::MainWindow(QWidget *parent)
         }
 
         QString portName = ui->devComboBox->currentText();
-        device->open(portName.toStdString(), MLX90640::BAUDRATE_460800);
+        device->openDevice(portName.toStdString(), MLX90640::BAUDRATE_460800);
 
         /* parameters */
         device->setEmissivity(0.95);
     });
     /* close device */
     connect(ui->stopBtn, &QPushButton::clicked, this, [=](){
-        device->close();
+        device->closeDevice();
         return;
     });
     /* capture */
     connect(ui->captureBtn, &QPushButton::clicked, this, [&](){
-        if (readyCaputure == false) {
-            readyCaputure = true;
+        if (!readyCaputure.load()) {
+            readyCaputure.store(1);
         }
     });
     /* enumerate device */
@@ -68,21 +69,29 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
-    if (device != nullptr) {
-        delete device;
-    }
 }
 
 void MainWindow::updateImage(const QImage &img)
 {
-    if (readyCaputure == true) {
+    if (readyCaputure.load()) {
+        readyCaputure.store(0);
         QString fileName = QString("img_%1.jpg").arg(QDateTime::currentDateTime().toString("yyyyMMddhhmmss"));
         img.save(fileName);
         statusBar()->showMessage(QString("save image:%1").arg(fileName));
-        readyCaputure = false;
+        QDesktopServices::openUrl(QUrl(fileName));
     }
     QImage img_ = img.scaled(ui->videoLabel->size());
     ui->videoLabel->setPixmap(QPixmap::fromImage(img_));
     return;
+}
+
+void MainWindow::closeEvent(QCloseEvent *ev)
+{
+    if (device != nullptr) {
+        device->closeDevice();
+        delete device;
+        device = nullptr;
+    }
+    return QMainWindow::closeEvent(ev);
 }
 

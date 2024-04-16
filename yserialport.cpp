@@ -5,9 +5,9 @@ YSerialPort::YSerialPort()
 
 }
 
-bool YSerialPort::openDevice(const std::string &name, int baudRate)
+bool YSerialPort::openDevice(const std::string &path, int baudRate)
 {
-    setPortName(name.c_str());
+    setPortName(path.c_str());
     bool ret = this->open(QIODevice::ReadWrite);
     if (ret == false) {
         return false;

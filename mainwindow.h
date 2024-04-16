@@ -5,9 +5,10 @@
 #include <QImage>
 #include <QDateTime>
 #include <QTimer>
+#include <QCloseEvent>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
-
+#include <atomic>
 #include "mlx90640.h"
 
 QT_BEGIN_NAMESPACE
@@ -25,10 +26,12 @@ signals:
     void sendImage(const QImage &img);
 public slots:
     void updateImage(const QImage &img);
+protected:
+    void closeEvent(QCloseEvent *ev) override;
 private:
     Ui::MainWindow *ui;
     cv::Mat imgs;
-    bool readyCaputure;
+    std::atomic_bool readyCaputure;
     MLX90640 *device;
 };
 #endif // MAINWINDOW_H

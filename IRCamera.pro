@@ -30,26 +30,14 @@ win32 {
 
     LIBPATH = D:/home/3rdparty
     #opencv
-    OPENCV_PATH = $$LIBPATH/opencv455
+    OPENCV_PATH = $$LIBPATH/opencv48
     INCLUDEPATH += $$OPENCV_PATH/include
-    LIBS += -L$$OPENCV_PATH/x64/vc16/lib -lopencv_calib3d455 \
-                                -lopencv_core455 \
-                                -lopencv_dnn455 \
-                                -lopencv_features2d455 \
-                                -lopencv_flann455 \
-                                -lopencv_gapi455 \
-                                -lopencv_highgui455 \
-                                -lopencv_imgcodecs455 \
-                                -lopencv_imgproc455 \
-                                -lopencv_ml455 \
-                                -lopencv_objdetect455 \
-                                -lopencv_photo455 \
-                                -lopencv_stitching455 \
-                                -lopencv_video455 \
-                                -lopencv_videoio455
+    LIBS += -L$$OPENCV_PATH/x64/vc16/lib -lopencv_highgui480 \
+                                -lopencv_imgcodecs480 \
+                                -lopencv_imgproc480 \
+                                -lopencv_core480
+
 }
-
-
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
