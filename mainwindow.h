@@ -30,7 +30,7 @@ protected:
     void closeEvent(QCloseEvent *ev) override;
 private:
     Ui::MainWindow *ui;
-    cv::Mat imgs;
+    cv::Mat temperatureImage;
     std::atomic_bool readyCaputure;
     MLX90640 *device;
 };

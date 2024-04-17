@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QDesktopServices>
+#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -10,27 +11,26 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     /* device */
-    device = new MLX90640(24, 32, [&](int h, int w, unsigned char* data){
+    device = new MLX90640([=](int h, int w, unsigned char* data){
         cv::Mat img(h, w, CV_8UC3, data);
         /* gaussian filter */
         cv::GaussianBlur(img, img, cv::Size(3, 3), 0);
         /* resize */
-        cv::resize(img, imgs, cv::Size(640, 480), 0, 0, cv::INTER_CUBIC);
+        cv::resize(img, temperatureImage, cv::Size(640, 480), 0, 0, cv::INTER_CUBIC);
         /* max temperature */
         MLX90640::Temperature &temp = device->maxTemp;
         temp.value /= 100;
         temp.i *= 20;
         temp.j *= 20;
-        cv::putText(imgs,
+        cv::putText(temperatureImage,
                     std::to_string(temp.value),
                     cv::Point(temp.i, temp.j),
                     cv::FONT_HERSHEY_SIMPLEX,
                     0.5,
                     cv::Scalar(255, 255, 255));
         /* send image */
-        emit sendImage(QImage(imgs.data, 640, 480, QImage::Format_RGB888));
+        emit sendImage(QImage(temperatureImage.data, 640, 480, QImage::Format_RGB888));
     });
-    device->setColorScalar(0.8, 0.1, 0.1);
     /* connect */
     /* update image */
     connect(this, &MainWindow::sendImage,
@@ -38,12 +38,14 @@ MainWindow::MainWindow(QWidget *parent)
     /* open device */
     connect(ui->startBtn, &QPushButton::clicked, this, [=](){
         if (ui->devComboBox->count() == 0) {
+            QMessageBox::warning(this, "ERROR", "NO DEVICE.");
             return;
         }
-
-        QString portName = ui->devComboBox->currentText();
-        device->openDevice(portName.toStdString(), MLX90640::BAUDRATE_460800);
-
+        QString path = ui->devComboBox->currentText();
+        if (!device->openDevice(path.toStdString(), MLX90640::BAUDRATE_460800)) {
+            QMessageBox::warning(this, "ERROR", "FAILED TO OPEN DEVICE.");
+            return;
+        }
         /* parameters */
         device->setEmissivity(0.95);
     });

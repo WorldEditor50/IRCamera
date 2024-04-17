@@ -59,31 +59,12 @@ public:
         MODE_PUSH = 0,
         MODE_REQ
     };
-    enum PacketOffset {
-        PACKET_HEADER = 0,
-        PACKET_SIZE = 2,
-        PACKET_TEMPERATUES = 4,
-        PACKET_TA = 1540,
-        PACKET_CHECKSUM = 1542
-    };
     struct Packet {
         unsigned short header;
         unsigned short size;
-        unsigned short temperature[768];
+        unsigned short temperatures[768];
         unsigned short ta;
         unsigned short checksum;
-    };
-
-    class Scalar
-    {
-    public:
-        float r;
-        float g;
-        float b;
-    public:
-        Scalar(){}
-        explicit Scalar(float r_, float g_, float b_)
-            :r(r_),g(g_),b(b_){}
     };
 
     struct Temperature {
@@ -93,7 +74,9 @@ public:
     };
 
     using FnProcess = std::function<void(int, int, unsigned char*)>;
-    constexpr static size_t packet_len = 1544;
+    constexpr static int packet_len = sizeof (Packet);
+    constexpr static int hi = 24;
+    constexpr static int wi = 32;
 public:
     Temperature maxTemp;
     Temperature minTemp;
@@ -106,7 +89,6 @@ protected:
     float minTemperature;
     float maxTemperature;
     float ta;
-    std::vector<float> temperatures;
     /* device */
     std::mutex mutex;
     std::thread sampleThread;
@@ -114,26 +96,17 @@ protected:
     YSerialPort *serialport;
     /* image */
     FnProcess process;
-    Scalar colorScalar;
-    int h;
-    int w;
     unsigned char *img;
 protected:
     void run();
-    static void packetToTemperatures(std::vector<float> &temperatures, float &ta, const unsigned char *packet);
-    static void temperatureToRGB(int h, int w, unsigned char *img,
-                                 const std::vector<float> &temperatures,
-                                 const Scalar &s,
-                                 Temperature &maxTemp,
-                                 Temperature &minTemp);
+    void parse(unsigned char* data, int datasize);
 public:
-    explicit MLX90640(int h_, int w_, FnProcess func);
+    explicit MLX90640(FnProcess func);
     ~MLX90640();
-    void setColorScalar(float r, float g, float b);
     void setFrequence(int freq);
     void setMode(int mode);
     void setEmissivity(float value);
-    bool openDevice(const std::string &portName, unsigned long baudRate_);
+    bool openDevice(const std::string &path, unsigned long baudRate_);
     void closeDevice();
 };
 
